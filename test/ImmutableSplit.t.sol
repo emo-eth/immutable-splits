@@ -85,7 +85,7 @@ contract ImmutableSplitsTest is Test {
     function testSplitErc20() public {
         ImmutableSplit clone = _deployClone(5000, 5000);
         SafeTransferLib.safeTransfer(erc20, address(clone), 1 ether);
-        clone.splitErc20(erc20);
+        clone.splitErc20(address(erc20));
         assertEq(erc20.balanceOf(address(0x1)), 0.5 ether);
         assertEq(erc20.balanceOf(address(0x2)), 0.5 ether);
     }
@@ -93,7 +93,7 @@ contract ImmutableSplitsTest is Test {
     function testSplitErc20_zeroBalance() public {
         ImmutableSplit clone = _deployClone(5000, 5000);
         vm.recordLogs();
-        clone.splitErc20(erc20);
+        clone.splitErc20(address(erc20));
         Vm.Log[] memory logs = vm.getRecordedLogs();
         assertEq(logs.length, 0);
     }
@@ -101,7 +101,7 @@ contract ImmutableSplitsTest is Test {
     function testSplitErc20_skipZero() public {
         ImmutableSplit clone = _deployClone(1, 9999);
         SafeTransferLib.safeTransfer(erc20, address(clone), 500);
-        clone.splitErc20(erc20);
+        clone.splitErc20(address(erc20));
         assertEq(erc20.balanceOf(address(0x1)), 0);
         assertEq(erc20.balanceOf(address(0x2)), 499);
     }
@@ -110,7 +110,7 @@ contract ImmutableSplitsTest is Test {
         ImmutableSplit clone = _deployClone(5000, 5000);
         SafeTransferLib.safeTransfer(erc20, address(clone), 1 ether);
         vm.expectRevert(NotASmartContract.selector);
-        clone.splitErc20(ERC20(address(0x1)));
+        clone.splitErc20((address(0x1)));
     }
 
     function testProxyCall() public {
@@ -143,7 +143,7 @@ contract ImmutableSplitsTest is Test {
         clone.proxyCall(address(revertooooor), abi.encodeWithSelector(Revertooooor.callMe.selector));
     }
 
-    function testProxyCall_CannotApproveERC20() public {
+    function testProxyCall_CannotApprove() public {
         ImmutableSplit clone = _deployClone(5000, 5000);
         vm.startPrank(address(0x1));
         vm.expectRevert(CannotApproveErc20.selector);

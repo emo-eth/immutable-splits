@@ -24,6 +24,9 @@ contract GasTest is Test {
         recipients[1] = Recipient(payable(address(2000)), 3333);
         recipients[2] = Recipient(payable(address(3000)), 3334);
         threeRecipients = ImmutableSplit(factory.createImmutableSplit(recipients));
+        address(1000).call{value: 1}("");
+        address(2000).call{value: 1}("");
+        address(3000).call{value: 1}("");
     }
 
     function test_snapshotCreate2CloneWithImmutableArgsThreeRecipients() public {

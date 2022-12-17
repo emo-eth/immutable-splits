@@ -6,8 +6,9 @@ import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {Recipient, CalldataPointer} from "./Structs.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {NotASmartContract, NotRecipient, CannotApproveErc20} from "./Errors.sol";
+import {IImmutableSplit} from "./IImmutableSplit.sol";
 
-contract ImmutableSplit is Clone {
+contract ImmutableSplit is IImmutableSplit, Clone {
     using SafeTransferLib for address payable;
     using SafeTransferLib for ERC20;
 
@@ -33,50 +34,11 @@ contract ImmutableSplit is Clone {
         return _getArgRecipients();
     }
 
-    function receiveHook() public payable {
-        Recipient[] calldata recipients = _getArgRecipients();
-        unchecked {
-            uint256 balance = address(this).balance;
-            if (balance == 0) {
-                return;
-            }
-            for (uint256 i = 0; i < recipients.length; ++i) {
-                uint256 amount = (balance * recipients[i].bps) / 10000;
-                if (amount == 0) {
-                    continue;
-                }
-                recipients[i].recipient.safeTransferETH(amount);
-            }
-        }
-    }
-
-    function splitErc20(ERC20 token) public {
+    function splitErc20(address token) public {
         if (address(token).code.length == 0) {
             revert NotASmartContract();
         }
         _splitErc20(token);
-    }
-
-    function _splitErc20(ERC20 token) internal {
-        Recipient[] calldata recipients = _getArgRecipients();
-        unchecked {
-            uint256 balance;
-            try token.balanceOf(address(this)) returns (uint256) {
-                balance = token.balanceOf(address(this));
-            } catch {
-                return;
-            }
-            if (balance == 0) {
-                return;
-            }
-            for (uint256 i = 0; i < recipients.length; ++i) {
-                uint256 amount = (balance * recipients[i].bps) / 10000;
-                if (amount == 0) {
-                    continue;
-                }
-                token.safeTransfer(recipients[i].recipient, amount);
-            }
-        }
     }
 
     function proxyCall(address target, bytes calldata callData) public onlyRecipient returns (bytes memory) {
@@ -94,7 +56,7 @@ contract ImmutableSplit is Clone {
             revert CannotApproveErc20();
         }
 
-        _splitErc20(ERC20(target));
+        _splitErc20(target);
         (bool success, bytes memory returndata) = target.call(callData);
 
         ///@solidity memory-safe-assembly
@@ -105,6 +67,47 @@ contract ImmutableSplit is Clone {
         return returndata;
     }
 
+    receive() external payable {}
+
+    function receiveHook() public payable {
+        Recipient[] calldata recipients = _getArgRecipients();
+        unchecked {
+            uint256 balance = address(this).balance;
+            if (balance == 0) {
+                return;
+            }
+            for (uint256 i = 0; i < recipients.length; ++i) {
+                uint256 amount = (balance * recipients[i].bps) / 10000;
+                if (amount == 0) {
+                    continue;
+                }
+                recipients[i].recipient.safeTransferETH(amount);
+            }
+        }
+    }
+
+    function _splitErc20(address token) internal {
+        Recipient[] calldata recipients = _getArgRecipients();
+        unchecked {
+            uint256 balance;
+            try ERC20(token).balanceOf(address(this)) returns (uint256) {
+                balance = ERC20(token).balanceOf(address(this));
+            } catch {
+                return;
+            }
+            if (balance == 0) {
+                return;
+            }
+            for (uint256 i = 0; i < recipients.length; ++i) {
+                uint256 amount = (balance * recipients[i].bps) / 10000;
+                if (amount == 0) {
+                    continue;
+                }
+                ERC20(token).safeTransfer(recipients[i].recipient, amount);
+            }
+        }
+    }
+
     function _getArgRecipients() internal pure returns (Recipient[] calldata recipient) {
         uint256 offset = _getImmutableArgsOffset();
         CalldataPointer calldata calldataPointer;
@@ -113,6 +116,4 @@ contract ImmutableSplit is Clone {
         }
         return calldataPointer.recipients;
     }
-
-    receive() external payable {}
 }
