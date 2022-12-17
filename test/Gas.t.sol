@@ -25,9 +25,9 @@ contract GasTest is Test {
         recipients[1] = createRecipient(payable(address(2000)), 3333);
         recipients[2] = createRecipient(payable(address(3000)), 3334);
         threeRecipients = ImmutableSplit(factory.createImmutableSplit(recipients));
-        address(1000).call{value: 1}("");
-        address(2000).call{value: 1}("");
-        address(3000).call{value: 1}("");
+        (bool success,) = address(1000).call{value: 1}("");
+        (success,) = address(2000).call{value: 1}("");
+        (success,) = address(3000).call{value: 1}("");
     }
 
     function test_snapshotCreate2CloneWithImmutableArgsThreeRecipients() public {
@@ -56,14 +56,16 @@ contract GasTest is Test {
     function test_snapshotSplitTwoRecipients() public {
         address _twoRecipients = address(twoRecipients);
         uint256 gas = gasleft();
-        _twoRecipients.call{value: 10000}("");
+        (bool success,) = _twoRecipients.call{value: 10000}("");
+        assertTrue(success);
         emit log_named_uint("gas used: ", gas - gasleft());
     }
 
     function test_snapshotSplitThreeRecipients() public {
         address _threeRecipients = address(threeRecipients);
         uint256 gas = gasleft();
-        _threeRecipients.call{value: 10000}("");
+        (bool success,) = _threeRecipients.call{value: 10000}("");
+        assertTrue(success);
         emit log_named_uint("gas used: ", gas - gasleft());
     }
 }
