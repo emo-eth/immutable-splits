@@ -9,7 +9,7 @@ import {NotASmartContract, NotRecipient, CannotApproveErc20} from "./Errors.sol"
 import {IImmutableSplit} from "./IImmutableSplit.sol";
 
 contract ImmutableSplit is IImmutableSplit, Clone {
-    using SafeTransferLib for address payable;
+    using SafeTransferLib for address;
     using SafeTransferLib for ERC20;
 
     uint256 constant IERC20_APPROVE_SELECTOR = 0x095ea7b300000000000000000000000000000000000000000000000000000000;
@@ -19,7 +19,7 @@ contract ImmutableSplit is IImmutableSplit, Clone {
         Recipient[] calldata recipients = _getArgRecipients();
         uint256 recipientsLength = recipients.length;
         for (uint256 i = 0; i < recipientsLength;) {
-            if (recipients[i].recipient == msg.sender) {
+            if (recipients[i].recipient() == msg.sender) {
                 _;
                 return;
             }
@@ -77,11 +77,11 @@ contract ImmutableSplit is IImmutableSplit, Clone {
                 return;
             }
             for (uint256 i = 0; i < recipients.length; ++i) {
-                uint256 amount = (balance * recipients[i].bps) / 10000;
+                uint256 amount = (balance * recipients[i].bps()) / 10000;
                 if (amount == 0) {
                     continue;
                 }
-                recipients[i].recipient.safeTransferETH(amount);
+                recipients[i].recipient().safeTransferETH(amount);
             }
         }
     }
@@ -99,11 +99,11 @@ contract ImmutableSplit is IImmutableSplit, Clone {
                 return;
             }
             for (uint256 i = 0; i < recipients.length; ++i) {
-                uint256 amount = (balance * recipients[i].bps) / 10000;
+                uint256 amount = (balance * recipients[i].bps()) / 10000;
                 if (amount == 0) {
                     continue;
                 }
-                ERC20(token).safeTransfer(recipients[i].recipient, amount);
+                ERC20(token).safeTransfer(recipients[i].recipient(), amount);
             }
         }
     }

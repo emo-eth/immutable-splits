@@ -12,6 +12,7 @@ import {SelfDestructooooor} from "./helpers/SelfDestructooooor.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {Revertooooor} from "./helpers/Revertooooor.sol";
 import {Reenterooooor} from "./helpers/Reenterooooor.sol";
+import {createRecipient} from "../src/Recipient.sol";
 
 contract ImmutableSplitsTest is Test {
     ImmutableSplit impl;
@@ -25,8 +26,8 @@ contract ImmutableSplitsTest is Test {
 
     function testGetRecipients() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(address(0x1)), 1000);
-        recipients[1] = Recipient(payable(address(0x2)), 2000);
+        recipients[0] = createRecipient(payable(address(0x1)), 1000);
+        recipients[1] = createRecipient(payable(address(0x2)), 2000);
         bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
         ImmutableSplit clone =
             ImmutableSplit(payable(Create2ClonesWithImmutableArgs.clone(address(impl), data, bytes32(0))));
@@ -36,8 +37,8 @@ contract ImmutableSplitsTest is Test {
 
     function testSplit() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(address(0x1)), 1000);
-        recipients[1] = Recipient(payable(address(0x2)), 9000);
+        recipients[0] = createRecipient(payable(address(0x1)), 1000);
+        recipients[1] = createRecipient(payable(address(0x2)), 9000);
         bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
 
         ImmutableSplit clone =
@@ -49,8 +50,8 @@ contract ImmutableSplitsTest is Test {
 
     function testSplitSkipsZeroAmount() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(address(0x1)), 1);
-        recipients[1] = Recipient(payable(address(0x2)), 9999);
+        recipients[0] = createRecipient(payable(address(0x1)), 1);
+        recipients[1] = createRecipient(payable(address(0x2)), 9999);
         ImmutableSplit clone = _deployClone(recipients);
 
         SafeTransferLib.safeTransferETH(payable(address(clone)), 500);
@@ -60,8 +61,8 @@ contract ImmutableSplitsTest is Test {
 
     function testSplitSkipsZeroBalance() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(address(0x1)), 5000);
-        recipients[1] = Recipient(payable(address(0x2)), 5000);
+        recipients[0] = createRecipient(payable(address(0x1)), 5000);
+        recipients[1] = createRecipient(payable(address(0x2)), 5000);
         ImmutableSplit clone = _deployClone(recipients);
 
         SafeTransferLib.safeTransferETH(payable(address(clone)), 0);
@@ -71,8 +72,8 @@ contract ImmutableSplitsTest is Test {
 
     function testSplitNonzeroBalance() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(address(0x1)), 5000);
-        recipients[1] = Recipient(payable(address(0x2)), 5000);
+        recipients[0] = createRecipient(payable(address(0x1)), 5000);
+        recipients[1] = createRecipient(payable(address(0x2)), 5000);
         ImmutableSplit clone = _deployClone(recipients);
 
         (new SelfDestructooooor{value: 1 ether}()).selfDestruct(address(clone));
@@ -153,18 +154,18 @@ contract ImmutableSplitsTest is Test {
     function testReenterReceive() public {
         Reenterooooor reenterooooor = new Reenterooooor();
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(reenterooooor), 5000);
-        recipients[1] = Recipient(payable(address(type(uint160).max)), 5000);
+        recipients[0] = createRecipient(payable(reenterooooor), 5000);
+        recipients[1] = createRecipient(payable(address(type(uint160).max)), 5000);
 
         ImmutableSplit clone = _deployClone(recipients);
         vm.expectRevert("ETH_TRANSFER_FAILED");
         SafeTransferLib.safeTransferETH(address(clone), 1 ether);
     }
 
-    function _deployClone(uint256 bps1, uint256 bps2) internal returns (ImmutableSplit) {
+    function _deployClone(uint16 bps1, uint16 bps2) internal returns (ImmutableSplit) {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = Recipient(payable(address(0x1)), bps1);
-        recipients[1] = Recipient(payable(address(0x2)), bps2);
+        recipients[0] = createRecipient(payable(address(0x1)), bps1);
+        recipients[1] = createRecipient(payable(address(0x2)), bps2);
         return _deployClone(recipients);
     }
 

@@ -41,16 +41,14 @@ contract ImmutableSplitFactory {
     function _validateBps(Recipient[] calldata recipients) internal pure {
         uint256 totalBps;
         uint256 lastBps;
-        address lastRecipient;
+        Recipient lastRecipient;
         unchecked {
             for (uint256 i; i < recipients.length; ++i) {
-                uint256 bps = recipients[i].bps;
-                address recipient = recipients[i].recipient;
-                if (bps < lastBps) {
-                    revert RecipientsMustBeSortedByAscendingBpsAndAddress();
-                } else if (bps == lastBps && recipient < lastRecipient) {
+                Recipient recipient = recipients[i];
+                if (Recipient.unwrap(recipient) <= Recipient.unwrap(lastRecipient)) {
                     revert RecipientsMustBeSortedByAscendingBpsAndAddress();
                 }
+                uint256 bps = recipient.bps();
 
                 if (bps > 10000 || bps == 0) revert InvalidBps(bps);
                 totalBps += bps;
