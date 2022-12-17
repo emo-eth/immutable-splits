@@ -15,7 +15,7 @@ interface IImmutableSplit {
 ```
 
 - Automatically splits Ether/native-token payments to a predetermined set of recipients.
-  - The recipients and their respective shares are set at deployment time and cannot be changed for gas-efficiency
+  - Recipients and their respective shares are set at deployment time and, for gas-efficiency, cannot be changed 
 - Disburses ERC20 splits when the `splitErc20` function is called
 - `Recipient` addresses included on an `ImmutableSplit` may call the `proxyCall` function to execute a transaction on behalf of the `ImmutableSplit`. This is useful for allowing withdrawal of non-fungible tokens accidentally sent to a smart contract, or to execute a withdrawal directly to the split contract.
 
@@ -29,7 +29,7 @@ interface IImmutableSplitFactory {
 ```
 
 - Deploys `ImmutableSplit`s to deterministic addresses
-- Tracks which `ImmutableSplit`s have already been deployed, and will revert if attempting to re-deploy an `ImmutableSplit` for a given set of recipients + bps
+- Tracks which `ImmutableSplit`s have already been deployed, and will revert if attempting to re-deploy an `ImmutableSplit` for a given set of recipients + shares
 - When creating a new `ImmutableSplit`, an array of `Recipient`s must be passed. The following validation is applied:
   - A `Recipient` may not have a `bps` value of `0` or `10_000`.
   - The `bps` values of all `Recipient`s must sum to `10_000`.
