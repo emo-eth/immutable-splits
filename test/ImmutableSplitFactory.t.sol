@@ -93,6 +93,6 @@ contract ImmutableSplitFactoryTest is Test {
         Recipient[] memory recipients = new Recipient[](1);
         recipients[0] = createRecipient(payable(address(1)), 10000);
         address payable split = test.createImmutableSplit(recipients);
-        assertEq(test.getImmutableSplitAddress(recipients), split);
+        assertEq(test.getDeployedImmutableSplitAddress(recipients), split);
     }
 }

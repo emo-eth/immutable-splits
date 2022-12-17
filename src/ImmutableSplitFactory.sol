@@ -8,13 +8,14 @@ import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args
 import {
     InvalidBps, InvalidTotalBps, RecipientsMustBeSortedByAscendingBpsAndAddress, AlreadyDeployed
 } from "./Errors.sol";
+import {IImmutableSplitFactory} from "./IImmutableSplitFactory.sol";
 
-contract ImmutableSplitFactory {
-    address public immutable impl;
-    mapping(bytes32 => address payable) public deployedSplits;
+contract ImmutableSplitFactory is IImmutableSplitFactory {
+    address public immutable IMMUTABLE_SPLIT_IMPLEMENTATION;
+    mapping(bytes32 => address payable) deployedSplits;
 
     constructor(address _impl) {
-        impl = _impl;
+        IMMUTABLE_SPLIT_IMPLEMENTATION = _impl;
     }
 
     function createImmutableSplit(Recipient[] calldata recipients) external returns (address payable) {
@@ -24,12 +25,12 @@ contract ImmutableSplitFactory {
             revert AlreadyDeployed(deployedSplitAddress);
         }
         bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
-        address payable split = Create2ClonesWithImmutableArgs.clone(impl, data, bytes32(0));
+        address payable split = Create2ClonesWithImmutableArgs.clone(IMMUTABLE_SPLIT_IMPLEMENTATION, data, bytes32(0));
         deployedSplits[recipientsHash] = split;
         return split;
     }
 
-    function getImmutableSplitAddress(Recipient[] calldata recipients) public view returns (address payable) {
+    function getDeployedImmutableSplitAddress(Recipient[] calldata recipients) public view returns (address) {
         return deployedSplits[_getRecipientsHash(recipients)];
     }
 
