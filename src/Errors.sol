@@ -6,4 +6,5 @@ error InvalidTotalBps(uint256 totalBps);
 error RecipientsMustBeSortedByAscendingBpsAndAddress();
 error NotASmartContract();
 error NotRecipient();
-error CannotProxyApproveErc20();
+error CannotApproveErc20();
+error AlreadyDeployed(address deployedSplitAddress);

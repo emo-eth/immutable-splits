@@ -5,7 +5,12 @@ import {Test} from "forge-std/Test.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {Recipient} from "../src/Structs.sol";
 import {ImmutableSplitFactory} from "../src/ImmutableSplitFactory.sol";
-import {InvalidBps, InvalidTotalBps, RecipientsMustBeSortedByAscendingBpsAndAddress} from "../src/Errors.sol";
+import {
+    InvalidBps,
+    InvalidTotalBps,
+    RecipientsMustBeSortedByAscendingBpsAndAddress,
+    AlreadyDeployed
+} from "../src/Errors.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
 
 contract ImmutableSplitFactoryTest is Test {
@@ -62,7 +67,7 @@ contract ImmutableSplitFactoryTest is Test {
         recipients[0] = Recipient(payable(address(1)), 10000);
         address payable split = test.createImmutableSplit(recipients);
 
-        vm.expectRevert(abi.encodeWithSelector(Create2ClonesWithImmutableArgs.CreateFail.selector));
+        vm.expectRevert(abi.encodeWithSelector(AlreadyDeployed.selector, split));
         split = test.createImmutableSplit(recipients);
     }
 
@@ -80,5 +85,12 @@ contract ImmutableSplitFactoryTest is Test {
         recipients[1] = Recipient(payable(address(1)), 5000);
         vm.expectRevert(abi.encodeWithSelector(RecipientsMustBeSortedByAscendingBpsAndAddress.selector));
         test.createImmutableSplit(recipients);
+    }
+
+    function testGetImmutableSplitAddress() public {
+        Recipient[] memory recipients = new Recipient[](1);
+        recipients[0] = Recipient(payable(address(1)), 10000);
+        address payable split = test.createImmutableSplit(recipients);
+        assertEq(test.getImmutableSplitAddress(recipients), split);
     }
 }

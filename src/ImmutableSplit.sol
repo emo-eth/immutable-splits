@@ -5,7 +5,7 @@ import {Clone} from "clones-with-immutable-args/Clone.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {Recipient, CalldataPointer} from "./Structs.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
-import {NotASmartContract, NotRecipient, CannotProxyApproveErc20} from "./Errors.sol";
+import {NotASmartContract, NotRecipient, CannotApproveErc20} from "./Errors.sol";
 
 contract ImmutableSplit is Clone {
     using SafeTransferLib for address payable;
@@ -20,6 +20,7 @@ contract ImmutableSplit is Clone {
         for (uint256 i = 0; i < recipientsLength;) {
             if (recipients[i].recipient == msg.sender) {
                 _;
+                return;
             }
             unchecked {
                 ++i;
@@ -59,7 +60,12 @@ contract ImmutableSplit is Clone {
     function _splitErc20(ERC20 token) internal {
         Recipient[] calldata recipients = _getArgRecipients();
         unchecked {
-            uint256 balance = token.balanceOf(address(this));
+            uint256 balance;
+            try token.balanceOf(address(this)) returns (uint256) {
+                balance = token.balanceOf(address(this));
+            } catch {
+                return;
+            }
             if (balance == 0) {
                 return;
             }
@@ -74,16 +80,18 @@ contract ImmutableSplit is Clone {
     }
 
     function proxyCall(address target, bytes calldata callData) public onlyRecipient returns (bytes memory) {
-        if (target.code.length == 0) {
+        if (address(target).code.length == 0) {
             revert NotASmartContract();
         }
         bool isErc20ApproveCall;
+        bytes32 thing;
         ///@solidity memory-safe-assembly
         assembly {
-            isErc20ApproveCall := eq(and(calldataload(0), SELECTOR_MASK), IERC20_APPROVE_SELECTOR)
+            thing := calldataload(callData.offset)
+            isErc20ApproveCall := eq(and(calldataload(callData.offset), SELECTOR_MASK), IERC20_APPROVE_SELECTOR)
         }
         if (isErc20ApproveCall) {
-            revert CannotProxyApproveErc20();
+            revert CannotApproveErc20();
         }
 
         _splitErc20(ERC20(target));
