@@ -98,8 +98,8 @@ contract ImmutableSplit is IImmutableSplit, Clone {
         Recipient[] calldata recipients = _getArgRecipients();
         unchecked {
             uint256 balance;
-            try ERC20(token).balanceOf(address(this)) returns (uint256) {
-                balance = ERC20(token).balanceOf(address(this));
+            try ERC20(token).balanceOf(address(this)) returns (uint256 _balance) {
+                balance = _balance;
             } catch {
                 return false;
             }

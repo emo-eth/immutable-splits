@@ -6,7 +6,7 @@ import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args
 import {Recipient} from "../src/Structs.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {NotASmartContract, CannotApproveErc20} from "../src/Errors.sol";
+import {NotASmartContract, CannotApproveErc20, Erc20TransferFailed} from "../src/Errors.sol";
 import {TestERC20} from "./helpers/TestERC20.sol";
 import {TestERC721} from "./helpers/TestERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
@@ -123,6 +123,13 @@ contract ImmutableSplitsTest is Test {
         assertEq(erc20.balanceOf(address(0x2)), 499);
     }
 
+    function testSplitErc20_reverts() public {
+        Receivooooor receivooooor = new Receivooooor();
+        ImmutableSplit clone = _deployClone(5000, 5000);
+        vm.expectRevert(Erc20TransferFailed.selector);
+        clone.splitErc20(address(receivooooor));
+    }
+
     function testSplitErc20_NotAContract() public {
         ImmutableSplit clone = _deployClone(5000, 5000);
         SafeTransferLib.safeTransfer(erc20, address(clone), 1 ether);
@@ -160,6 +167,8 @@ contract ImmutableSplitsTest is Test {
         clone.proxyCall(address(erc721), abi.encodeWithSelector(erc721.mint.selector, address(clone), 3));
 
         assertEq(erc721.balanceOf(address(clone)), 3);
+        // just so coverage doesn't complain
+        erc721.tokenURI(1);
     }
 
     function testProxyCallRevert() public {
