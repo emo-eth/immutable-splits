@@ -8,3 +8,4 @@ error NotASmartContract();
 error NotRecipient();
 error CannotApproveErc20();
 error AlreadyDeployed(address deployedSplitAddress);
+error Erc20TransferFailed();

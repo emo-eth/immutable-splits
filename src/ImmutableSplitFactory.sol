@@ -11,12 +11,15 @@ import {
 import {IImmutableSplitFactory} from "./IImmutableSplitFactory.sol";
 
 contract ImmutableSplitFactory is IImmutableSplitFactory {
+    uint32 constant RECEIVE_HOOK_SELECTOR = 0x95a9ecf1;
     address public immutable IMMUTABLE_SPLIT_IMPLEMENTATION;
-    mapping(bytes32 => address payable) deployedSplits;
+    mapping(bytes32 => address payable) internal deployedSplits;
 
     constructor(address _impl) {
         IMMUTABLE_SPLIT_IMPLEMENTATION = _impl;
     }
+
+    event log_bytes(bytes);
 
     function createImmutableSplit(Recipient[] calldata recipients) external returns (address payable) {
         bytes32 recipientsHash = _getRecipientsHash(recipients);
@@ -24,7 +27,22 @@ contract ImmutableSplitFactory is IImmutableSplitFactory {
         if (deployedSplitAddress != address(0)) {
             revert AlreadyDeployed(deployedSplitAddress);
         }
-        bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
+        bytes memory data;
+        ///@solidity memory-safe-assembly
+        assembly {
+            let ptr := mload(0x40)
+            // copy all calldata to memory, offset by one word, where we will store bytes length
+            // (returndata here will return 0 for 1 gas cheaper than pushing 0 onto the stack)
+            calldatacopy(add(ptr, 0x20), returndatasize(), calldatasize())
+            // store the length of calldata in the first word by shift left by 32 bits
+            // overwrite the selector in the following 4 bytes
+            mstore(add(ptr, 4), or(shl(32, calldatasize()), RECEIVE_HOOK_SELECTOR))
+            // set pointer to data
+            data := ptr
+            // update free memory pointer
+            mstore(0x40, add(ptr, add(0x20, calldatasize())))
+        }
+
         address payable split = Create2ClonesWithImmutableArgs.clone(IMMUTABLE_SPLIT_IMPLEMENTATION, data, bytes32(0));
         deployedSplits[recipientsHash] = split;
         return split;

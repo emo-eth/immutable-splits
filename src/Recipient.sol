@@ -21,6 +21,14 @@ function bps(Recipient _recipient) pure returns (uint256 _bps) {
     }
 }
 
+function unpack(Recipient _recipient) pure returns (address _recip, uint256 _bps) {
+    ///@solidity memory-safe-assembly
+    assembly {
+        _recip := and(_recipient, ADDRESS_MASK)
+        _bps := and(shr(BPS_LSHIFT, _recipient), BPS_MASK)
+    }
+}
+
 function createRecipient(address _recipient, uint16 _bps) pure returns (Recipient _recip) {
     ///@solidity memory-safe-assembly
     assembly {
@@ -28,4 +36,4 @@ function createRecipient(address _recipient, uint16 _bps) pure returns (Recipien
     }
 }
 
-using {recipient, bps} for Recipient global;
+using {recipient, bps, unpack} for Recipient global;

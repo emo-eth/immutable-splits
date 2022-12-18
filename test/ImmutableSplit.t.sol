@@ -8,20 +8,25 @@ import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {NotASmartContract, CannotApproveErc20} from "../src/Errors.sol";
 import {TestERC20} from "./helpers/TestERC20.sol";
-import {SelfDestructooooor} from "./helpers/SelfDestructooooor.sol";
+import {TestERC721} from "./helpers/TestERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
+import {createRecipient} from "../src/Recipient.sol";
 import {Revertooooor} from "./helpers/Revertooooor.sol";
 import {Reenterooooor} from "./helpers/Reenterooooor.sol";
-import {createRecipient} from "../src/Recipient.sol";
+import {Receivooooor} from "./helpers/Receivooooor.sol";
+import {SelfDestructooooor} from "./helpers/SelfDestructooooor.sol";
 
 contract ImmutableSplitsTest is Test {
     ImmutableSplit impl;
     TestERC20 erc20;
+    TestERC721 erc721;
 
     function setUp() public {
         impl = new ImmutableSplit();
         erc20 = new TestERC20();
         erc20.mint(address(this), 1 ether);
+        erc721 = new TestERC721();
+        // erc721.mint(address(this), 1);
     }
 
     function testGetRecipients() public {
@@ -50,22 +55,33 @@ contract ImmutableSplitsTest is Test {
 
     function testSplitSkipsZeroAmount() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = createRecipient(payable(address(0x1)), 1);
+        Receivooooor receivooooor = new Receivooooor();
+        recipients[0] = createRecipient(payable(receivooooor), 1);
         recipients[1] = createRecipient(payable(address(0x2)), 9999);
         ImmutableSplit clone = _deployClone(recipients);
 
+        vm.recordLogs();
         SafeTransferLib.safeTransferETH(payable(address(clone)), 500);
-        assertEq(address(0x1).balance, 0);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        // the Receivooooor would have emitted a log if it was called into
+        assertEq(logs.length, 0);
+        assertEq(address(receivooooor).balance, 0);
         assertEq(address(0x2).balance, 499);
     }
 
     function testSplitSkipsZeroBalance() public {
         Recipient[] memory recipients = new Recipient[](2);
-        recipients[0] = createRecipient(payable(address(0x1)), 5000);
-        recipients[1] = createRecipient(payable(address(0x2)), 5000);
+        Receivooooor receivooooor1 = new Receivooooor();
+        Receivooooor receivooooor2 = new Receivooooor();
+        recipients[0] = createRecipient(payable(receivooooor1), 5000);
+        recipients[1] = createRecipient(payable(receivooooor2), 5000);
         ImmutableSplit clone = _deployClone(recipients);
 
+        vm.recordLogs();
         SafeTransferLib.safeTransferETH(payable(address(clone)), 0);
+        Vm.Log[] memory logs = vm.getRecordedLogs();
+        // the Receivooooors would have emitted logs if they were called into
+        assertEq(logs.length, 0);
         assertEq(address(0x1).balance, 0);
         assertEq(address(0x2).balance, 0);
     }
@@ -136,6 +152,16 @@ contract ImmutableSplitsTest is Test {
         clone.proxyCall(address(0x1000), abi.encodeWithSelector(erc20.transfer.selector, address(0x1), 0));
     }
 
+    function testProxyCall_TokenWithBalanceOf() public {
+        ImmutableSplit clone = _deployClone(5000, 5000);
+        erc721.mint(address(clone), 1);
+        erc721.mint(address(clone), 2);
+        vm.startPrank(address(0x1));
+        clone.proxyCall(address(erc721), abi.encodeWithSelector(erc721.mint.selector, address(clone), 3));
+
+        assertEq(erc721.balanceOf(address(clone)), 3);
+    }
+
     function testProxyCallRevert() public {
         ImmutableSplit clone = _deployClone(5000, 5000);
         Revertooooor revertooooor = new Revertooooor();
@@ -148,7 +174,7 @@ contract ImmutableSplitsTest is Test {
         ImmutableSplit clone = _deployClone(5000, 5000);
         vm.startPrank(address(0x1));
         vm.expectRevert(CannotApproveErc20.selector);
-        clone.proxyCall(address(erc20), abi.encodeWithSelector(erc20.approve.selector, address(0x1), 0));
+        clone.proxyCall(address(erc20), abi.encodeWithSelector(erc20.approve.selector, address(clone), 0));
     }
 
     function testReenterReceive() public {
