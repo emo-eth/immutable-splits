@@ -3,16 +3,17 @@ pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
-import {Recipient} from "../src/Structs.sol";
+import {Recipient} from "../src/lib/Structs.sol";
 import {ImmutableSplitFactory} from "../src/ImmutableSplitFactory.sol";
 import {
     InvalidBps,
     InvalidTotalBps,
     RecipientsMustBeSortedByAscendingBpsAndAddress,
-    AlreadyDeployed
-} from "../src/Errors.sol";
+    AlreadyDeployed,
+    InvalidRecipient
+} from "../src/lib/Errors.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
-import {createRecipient} from "../src/Recipient.sol";
+import {createRecipient} from "../src/lib/Recipient.sol";
 
 contract ImmutableSplitFactoryTest is Test {
     ImmutableSplitFactory test;
@@ -86,6 +87,14 @@ contract ImmutableSplitFactoryTest is Test {
         recipients[0] = createRecipient(payable(address(2)), 5000);
         recipients[1] = createRecipient(payable(address(1)), 5000);
         vm.expectRevert(abi.encodeWithSelector(RecipientsMustBeSortedByAscendingBpsAndAddress.selector));
+        test.createImmutableSplit(recipients);
+    }
+
+    function testFactory_zeroAddressRecipient() public {
+        Recipient[] memory recipients = new Recipient[](2);
+        recipients[0] = createRecipient(payable(address(0)), 5000);
+        recipients[1] = createRecipient(payable(address(1)), 5000);
+        vm.expectRevert(abi.encodeWithSelector(InvalidRecipient.selector));
         test.createImmutableSplit(recipients);
     }
 

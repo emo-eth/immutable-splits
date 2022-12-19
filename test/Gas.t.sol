@@ -5,8 +5,8 @@ import {Test} from "forge-std/Test.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {ImmutableSplitFactory} from "../src/ImmutableSplitFactory.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
-import {Recipient} from "../src/Structs.sol";
-import {createRecipient} from "../src/Recipient.sol";
+import {Recipient} from "../src/lib/Structs.sol";
+import {createRecipient} from "../src/lib/Recipient.sol";
 
 contract GasTest is Test {
     ImmutableSplitFactory factory;

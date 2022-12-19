@@ -2,7 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
-import {Recipient, createRecipient} from "../src/Recipient.sol";
+import {Recipient, createRecipient} from "../src/lib/Recipient.sol";
 
 contract RecipientTest is Test {
     function testRecipient() public {

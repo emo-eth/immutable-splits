@@ -3,14 +3,14 @@ pragma solidity ^0.8.17;
 
 import {Test, Vm} from "forge-std/Test.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
-import {Recipient} from "../src/Structs.sol";
+import {Recipient} from "../src/lib/Structs.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {NotASmartContract, CannotApproveErc20, Erc20TransferFailed} from "../src/Errors.sol";
+import {NotASmartContract, CannotApproveErc20, Erc20TransferFailed} from "../src/lib/Errors.sol";
 import {TestERC20} from "./helpers/TestERC20.sol";
 import {TestERC721} from "./helpers/TestERC721.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
-import {createRecipient} from "../src/Recipient.sol";
+import {createRecipient} from "../src/lib/Recipient.sol";
 import {Revertooooor} from "./helpers/Revertooooor.sol";
 import {Reenterooooor} from "./helpers/Reenterooooor.sol";
 import {Receivooooor} from "./helpers/Receivooooor.sol";

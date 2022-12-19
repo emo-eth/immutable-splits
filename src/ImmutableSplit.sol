@@ -1,22 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Clone} from "clones-with-immutable-args/Clone.sol";
+import {Clone} from "create2-clones-with-immutable-args/Clone.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {Recipient, CalldataPointer} from "./Structs.sol";
+import {Recipient, CalldataPointer} from "./lib/Structs.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
-import {NotASmartContract, NotRecipient, CannotApproveErc20, Erc20TransferFailed} from "./Errors.sol";
+import {NotASmartContract, NotRecipient, CannotApproveErc20, Erc20TransferFailed} from "./lib/Errors.sol";
 import {IImmutableSplit} from "./IImmutableSplit.sol";
+import {IERC20_APPROVE_SELECTOR, SELECTOR_MASK, CANNOT_APPROVE_ERC20_SELECTOR} from "./lib/Constants.sol";
 
 contract ImmutableSplit is IImmutableSplit, Clone {
     using SafeTransferLib for address;
     using SafeTransferLib for ERC20;
-
-    uint256 private constant IERC20_APPROVE_SELECTOR =
-        0x095ea7b300000000000000000000000000000000000000000000000000000000;
-    uint256 private constant SELECTOR_MASK = 0xffffffff00000000000000000000000000000000000000000000000000000000;
-    uint256 private constant CANNOT_APPROVE_ERC20_SELECTOR =
-        0xfc87612e00000000000000000000000000000000000000000000000000000000;
 
     modifier onlyRecipient() {
         Recipient[] calldata recipients = _getArgRecipients();
@@ -121,7 +116,8 @@ contract ImmutableSplit is IImmutableSplit, Clone {
         return true;
     }
 
-    ///@dev This function is a modified version of SafeTransferLib.safeTransfer that returns success instead of reverting
+    ///@dev This function is a modified version of SafeTransferLib.safeTransfer that returns success status instead of
+    ///     reverting
     function _safeTransferErc20(address token, address to, uint256 amount) internal returns (bool success) {
         /// @solidity memory-safe-assembly
         assembly {

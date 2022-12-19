@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Recipient} from "./Structs.sol";
+import {Recipient} from "./lib/Structs.sol";
 
 interface IImmutableSplit {
     function getRecipients() external view returns (Recipient[] memory);

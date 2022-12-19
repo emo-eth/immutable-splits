@@ -1,17 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.17;
 
-import {Clone} from "clones-with-immutable-args/Clone.sol";
-import {Recipient} from "./Structs.sol";
-import {ImmutableSplit} from "./ImmutableSplit.sol";
+import {Recipient} from "./lib/Structs.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
 import {
-    InvalidBps, InvalidTotalBps, RecipientsMustBeSortedByAscendingBpsAndAddress, AlreadyDeployed
-} from "./Errors.sol";
+    InvalidBps,
+    InvalidTotalBps,
+    RecipientsMustBeSortedByAscendingBpsAndAddress,
+    AlreadyDeployed,
+    InvalidRecipient
+} from "./lib/Errors.sol";
 import {IImmutableSplitFactory} from "./IImmutableSplitFactory.sol";
+import {RECEIVE_HOOK_SELECTOR} from "./lib/Constants.sol";
 
 contract ImmutableSplitFactory is IImmutableSplitFactory {
-    uint32 constant RECEIVE_HOOK_SELECTOR = 0x95a9ecf1;
     address public immutable IMMUTABLE_SPLIT_IMPLEMENTATION;
     mapping(bytes32 => address payable) internal deployedSplits;
 
@@ -67,8 +69,8 @@ contract ImmutableSplitFactory is IImmutableSplitFactory {
                 if (Recipient.unwrap(recipient) <= Recipient.unwrap(lastRecipient)) {
                     revert RecipientsMustBeSortedByAscendingBpsAndAddress();
                 }
-                uint256 bps = recipient.bps();
-
+                (address recip, uint256 bps) = recipient.unpack();
+                if (recip == address(0)) revert InvalidRecipient();
                 if (bps > 10000 || bps == 0) revert InvalidBps(bps);
                 totalBps += bps;
                 lastBps = bps;
