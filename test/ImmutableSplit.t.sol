@@ -16,6 +16,10 @@ import {Reenterooooor} from "./helpers/Reenterooooor.sol";
 import {Receivooooor} from "./helpers/Receivooooor.sol";
 import {SelfDestructooooor} from "./helpers/SelfDestructooooor.sol";
 
+interface IERC20Nonstandard {
+    function increaseAllowance(address, uint256) external;
+}
+
 contract ImmutableSplitsTest is Test {
     ImmutableSplit impl;
     TestERC20 erc20;
@@ -184,6 +188,15 @@ contract ImmutableSplitsTest is Test {
         vm.startPrank(address(0x1));
         vm.expectRevert(CannotApproveErc20.selector);
         clone.proxyCall(address(erc20), abi.encodeWithSelector(erc20.approve.selector, address(clone), 0));
+    }
+
+    function testProxyCall_CannotApproveNonstandard() public {
+        ImmutableSplit clone = _deployClone(5000, 5000);
+        vm.startPrank(address(0x1));
+        vm.expectRevert(CannotApproveErc20.selector);
+        clone.proxyCall(
+            address(erc20), abi.encodeWithSelector(IERC20Nonstandard.increaseAllowance.selector, address(clone), 0)
+        );
     }
 
     function testReenterReceive() public {

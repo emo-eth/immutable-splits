@@ -7,7 +7,12 @@ import {Recipient, CalldataPointer} from "./lib/Structs.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {NotASmartContract, NotRecipient, CannotApproveErc20, Erc20TransferFailed} from "./lib/Errors.sol";
 import {IImmutableSplit} from "./IImmutableSplit.sol";
-import {IERC20_APPROVE_SELECTOR, SELECTOR_MASK, CANNOT_APPROVE_ERC20_SELECTOR} from "./lib/Constants.sol";
+import {
+    IERC20_APPROVE_SELECTOR,
+    SELECTOR_MASK,
+    CANNOT_APPROVE_ERC20_SELECTOR,
+    IERC20_NONSTANDARD_INCREASE_ALLOWANCE_SELECTOR
+} from "./lib/Constants.sol";
 
 contract ImmutableSplit is IImmutableSplit, Clone {
     using SafeTransferLib for address;
@@ -46,11 +51,14 @@ contract ImmutableSplit is IImmutableSplit, Clone {
         if (address(target).code.length == 0) {
             revert NotASmartContract();
         }
-        bool isErc20ApproveCall;
         ///@solidity memory-safe-assembly
         assembly {
-            isErc20ApproveCall := eq(and(calldataload(callData.offset), SELECTOR_MASK), IERC20_APPROVE_SELECTOR)
-            if isErc20ApproveCall {
+            let maskedSelector := and(calldataload(callData.offset), SELECTOR_MASK)
+
+            if or(
+                eq(maskedSelector, IERC20_APPROVE_SELECTOR),
+                eq(maskedSelector, IERC20_NONSTANDARD_INCREASE_ALLOWANCE_SELECTOR)
+            ) {
                 mstore(0, CANNOT_APPROVE_ERC20_SELECTOR)
                 revert(0, 4)
             }
