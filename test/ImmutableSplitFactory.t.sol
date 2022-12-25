@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test} from "forge-std/Test.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
-import {Recipient} from "../src/lib/Structs.sol";
+import {RecipientType, Recipient} from "../src/lib/Structs.sol";
 import {ImmutableSplitFactory} from "../src/ImmutableSplitFactory.sol";
 import {
     InvalidBps,
@@ -24,24 +24,24 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testFactory() public {
-        Recipient[] memory recipients = new Recipient[](1);
+        RecipientType[] memory recipients = new RecipientType[](1);
         recipients[0] = createRecipient(payable(address(1)), 10000);
         address payable split = test.createImmutableSplit(recipients);
-        assertEq(ImmutableSplit(split).getRecipients()[0].recipient(), address(1));
-        assertEq(ImmutableSplit(split).getRecipients()[0].bps(), 10000);
+        assertEq(ImmutableSplit(split).getRecipients()[0].recipient, address(1));
+        assertEq(ImmutableSplit(split).getRecipients()[0].bps, 10000);
 
-        recipients = new Recipient[](2);
+        recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(1)), 5000);
         recipients[1] = createRecipient(payable(address(2)), 5000);
         split = test.createImmutableSplit(recipients);
-        assertEq(ImmutableSplit(split).getRecipients()[0].recipient(), address(1));
-        assertEq(ImmutableSplit(split).getRecipients()[0].bps(), 5000);
-        assertEq(ImmutableSplit(split).getRecipients()[1].recipient(), address(2));
-        assertEq(ImmutableSplit(split).getRecipients()[1].bps(), 5000);
+        assertEq(ImmutableSplit(split).getRecipients()[0].recipient, address(1));
+        assertEq(ImmutableSplit(split).getRecipients()[0].bps, 5000);
+        assertEq(ImmutableSplit(split).getRecipients()[1].recipient, address(2));
+        assertEq(ImmutableSplit(split).getRecipients()[1].bps, 5000);
     }
 
     function testFactoryInvalidTotal() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(1)), 5000);
         recipients[1] = createRecipient(payable(address(2)), 5001);
         vm.expectRevert(abi.encodeWithSelector(InvalidTotalBps.selector, 10001));
@@ -55,7 +55,7 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testFactoryInvalidBps() public {
-        Recipient[] memory recipients = new Recipient[](1);
+        RecipientType[] memory recipients = new RecipientType[](1);
         recipients[0] = createRecipient(payable(address(1)), 0);
         vm.expectRevert(abi.encodeWithSelector(InvalidBps.selector, 0));
         test.createImmutableSplit(recipients);
@@ -66,7 +66,7 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testFactoryRedeploySplit() public {
-        Recipient[] memory recipients = new Recipient[](1);
+        RecipientType[] memory recipients = new RecipientType[](1);
         recipients[0] = createRecipient(payable(address(1)), 10000);
         address payable split = test.createImmutableSplit(recipients);
 
@@ -75,7 +75,7 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testFactory_AscendingBps() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(1)), 6000);
         recipients[1] = createRecipient(payable(address(2)), 4000);
         vm.expectRevert(abi.encodeWithSelector(RecipientsMustBeSortedByAscendingBpsAndAddress.selector));
@@ -83,7 +83,7 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testFactory_AscendingAddress() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(2)), 5000);
         recipients[1] = createRecipient(payable(address(1)), 5000);
         vm.expectRevert(abi.encodeWithSelector(RecipientsMustBeSortedByAscendingBpsAndAddress.selector));
@@ -91,7 +91,7 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testFactory_zeroAddressRecipient() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(0)), 5000);
         recipients[1] = createRecipient(payable(address(1)), 5000);
         vm.expectRevert(abi.encodeWithSelector(InvalidRecipient.selector));
@@ -99,7 +99,7 @@ contract ImmutableSplitFactoryTest is Test {
     }
 
     function testGetImmutableSplitAddress() public {
-        Recipient[] memory recipients = new Recipient[](1);
+        RecipientType[] memory recipients = new RecipientType[](1);
         recipients[0] = createRecipient(payable(address(1)), 10000);
         address payable split = test.createImmutableSplit(recipients);
         assertEq(test.getDeployedImmutableSplitAddress(recipients), split);

@@ -5,7 +5,7 @@ import {Test} from "forge-std/Test.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {ImmutableSplitFactory} from "../src/ImmutableSplitFactory.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
-import {Recipient} from "../src/lib/Structs.sol";
+import {Recipient, RecipientType} from "../src/lib/Structs.sol";
 import {createRecipient} from "../src/lib/Recipient.sol";
 
 contract GasTest is Test {
@@ -16,11 +16,11 @@ contract GasTest is Test {
 
     function setUp() public {
         factory = new ImmutableSplitFactory(address(impl));
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(1000)), 5000);
         recipients[1] = createRecipient(payable(address(2000)), 5000);
         twoRecipients = ImmutableSplit(factory.createImmutableSplit(recipients));
-        recipients = new Recipient[](3);
+        recipients = new RecipientType[](3);
         recipients[0] = createRecipient(payable(address(1000)), 3333);
         recipients[1] = createRecipient(payable(address(2000)), 3333);
         recipients[2] = createRecipient(payable(address(3000)), 3334);
@@ -31,7 +31,7 @@ contract GasTest is Test {
     }
 
     function test_snapshotCreate2CloneWithImmutableArgsThreeRecipients() public {
-        Recipient[] memory recipients = new Recipient[](3);
+        RecipientType[] memory recipients = new RecipientType[](3);
         recipients[0] = createRecipient(payable(address(1000)), 3331);
         recipients[1] = createRecipient(payable(address(2000)), 3334);
         recipients[2] = createRecipient(payable(address(3000)), 3335);
@@ -42,7 +42,7 @@ contract GasTest is Test {
     }
 
     function test_snapshotFactoryThreeRecipients() public {
-        Recipient[] memory recipients = new Recipient[](3);
+        RecipientType[] memory recipients = new RecipientType[](3);
         recipients[0] = createRecipient(payable(address(1000)), 3332);
         recipients[1] = createRecipient(payable(address(2000)), 3334);
         recipients[2] = createRecipient(payable(address(3000)), 3334);

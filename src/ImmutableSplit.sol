@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Clone} from "create2-clones-with-immutable-args/Clone.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
-import {Recipient, CalldataPointer} from "./lib/Structs.sol";
+import {RecipientType, Recipient, CalldataPointer} from "./lib/Structs.sol";
 import {ERC20} from "solmate/tokens/ERC20.sol";
 import {NotASmartContract, NotRecipient, CannotApproveErc20, Erc20TransferFailed} from "./lib/Errors.sol";
 import {IImmutableSplit} from "./IImmutableSplit.sol";
@@ -19,7 +19,7 @@ contract ImmutableSplit is IImmutableSplit, Clone {
     using SafeTransferLib for ERC20;
 
     modifier onlyRecipient() {
-        Recipient[] calldata recipients = _getArgRecipients();
+        RecipientType[] calldata recipients = _getArgRecipients();
         uint256 recipientsLength = recipients.length;
         for (uint256 i = 0; i < recipientsLength;) {
             if (recipients[i].recipient() == msg.sender) {
@@ -33,8 +33,16 @@ contract ImmutableSplit is IImmutableSplit, Clone {
         revert NotRecipient();
     }
 
-    function getRecipients() public pure returns (Recipient[] memory recipients) {
-        return _getArgRecipients();
+    function getRecipients() public pure override returns (Recipient[] memory recipients) {
+        RecipientType[] calldata _recipients = _getArgRecipients();
+        uint256 recipientsLength = _recipients.length;
+        recipients = new Recipient[](recipientsLength);
+        unchecked {
+            for (uint256 i = 0; i < recipientsLength; ++i) {
+                (address recipient, uint256 bps) = _recipients[i].unpack();
+                recipients[i] = Recipient({recipient: payable(recipient), bps: uint16(bps)});
+            }
+        }
     }
 
     function splitErc20(address token) public {
@@ -76,7 +84,7 @@ contract ImmutableSplit is IImmutableSplit, Clone {
     }
 
     function receiveHook() public payable {
-        Recipient[] calldata recipients = _getArgRecipients();
+        RecipientType[] calldata recipients = _getArgRecipients();
         unchecked {
             uint256 balance = address(this).balance;
             if (balance == 0) {
@@ -98,7 +106,7 @@ contract ImmutableSplit is IImmutableSplit, Clone {
     }
 
     function _splitErc20(address token) internal returns (bool) {
-        Recipient[] calldata recipients = _getArgRecipients();
+        RecipientType[] calldata recipients = _getArgRecipients();
         unchecked {
             uint256 balance;
             try ERC20(token).balanceOf(address(this)) returns (uint256 _balance) {
@@ -152,7 +160,7 @@ contract ImmutableSplit is IImmutableSplit, Clone {
     }
 
     ///@dev Read immutable Recipients from extra calldata.
-    function _getArgRecipients() internal pure returns (Recipient[] calldata recipient) {
+    function _getArgRecipients() internal pure returns (RecipientType[] calldata recipient) {
         uint256 offset = _getImmutableArgsOffset();
         CalldataPointer calldata calldataPointer;
         ///@solidity memory-safe-assembly

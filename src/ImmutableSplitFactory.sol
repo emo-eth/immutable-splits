@@ -2,6 +2,7 @@
 pragma solidity ^0.8.17;
 
 import {Recipient} from "./lib/Structs.sol";
+import {RecipientType} from "./lib/Recipient.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
 import {
     InvalidBps,
@@ -23,7 +24,7 @@ contract ImmutableSplitFactory is IImmutableSplitFactory {
 
     event log_bytes(bytes);
 
-    function createImmutableSplit(Recipient[] calldata recipients) external returns (address payable) {
+    function createImmutableSplit(RecipientType[] calldata recipients) external returns (address payable) {
         bytes32 recipientsHash = _getRecipientsHash(recipients);
         address deployedSplitAddress = deployedSplits[recipientsHash];
         if (deployedSplitAddress != address(0)) {
@@ -50,23 +51,23 @@ contract ImmutableSplitFactory is IImmutableSplitFactory {
         return split;
     }
 
-    function getDeployedImmutableSplitAddress(Recipient[] calldata recipients) public view returns (address) {
+    function getDeployedImmutableSplitAddress(RecipientType[] calldata recipients) public view returns (address) {
         return deployedSplits[_getRecipientsHash(recipients)];
     }
 
-    function _getRecipientsHash(Recipient[] calldata recipients) internal pure returns (bytes32) {
+    function _getRecipientsHash(RecipientType[] calldata recipients) internal pure returns (bytes32) {
         _validateBps(recipients);
         return keccak256(abi.encode(recipients));
     }
 
-    function _validateBps(Recipient[] calldata recipients) internal pure {
+    function _validateBps(RecipientType[] calldata recipients) internal pure {
         uint256 totalBps;
         uint256 lastBps;
-        Recipient lastRecipient;
+        RecipientType lastRecipient;
         unchecked {
             for (uint256 i; i < recipients.length; ++i) {
-                Recipient recipient = recipients[i];
-                if (Recipient.unwrap(recipient) <= Recipient.unwrap(lastRecipient)) {
+                RecipientType recipient = recipients[i];
+                if (RecipientType.unwrap(recipient) <= RecipientType.unwrap(lastRecipient)) {
                     revert RecipientsMustBeSortedByAscendingBpsAndAddress();
                 }
                 (address recip, uint256 bps) = recipient.unpack();

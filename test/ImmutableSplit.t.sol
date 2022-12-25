@@ -3,7 +3,7 @@ pragma solidity ^0.8.17;
 
 import {Test, Vm} from "forge-std/Test.sol";
 import {Create2ClonesWithImmutableArgs} from "create2-clones-with-immutable-args/Create2ClonesWithImmutableArgs.sol";
-import {Recipient} from "../src/lib/Structs.sol";
+import {RecipientType, Recipient} from "../src/lib/Structs.sol";
 import {ImmutableSplit} from "../src/ImmutableSplit.sol";
 import {SafeTransferLib} from "solmate/utils/SafeTransferLib.sol";
 import {NotASmartContract, CannotApproveErc20, Erc20TransferFailed} from "../src/lib/Errors.sol";
@@ -34,18 +34,26 @@ contract ImmutableSplitsTest is Test {
     }
 
     function testGetRecipients() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(0x1)), 1000);
         recipients[1] = createRecipient(payable(address(0x2)), 2000);
         bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
         ImmutableSplit clone =
             ImmutableSplit(payable(Create2ClonesWithImmutableArgs.clone(address(impl), data, bytes32(0))));
         Recipient[] memory cloneRecipients = clone.getRecipients();
-        assertEq(keccak256(abi.encode(cloneRecipients)), keccak256(abi.encode(recipients)));
+        assertEq(keccak256(abi.encode(cloneRecipients)), keccak256(abi.encode(_convertRecipientsType(recipients))));
+    }
+
+    function _convertRecipientsType(RecipientType[] memory recipients) internal pure returns (Recipient[] memory) {
+        Recipient[] memory _recipients = new Recipient[](recipients.length);
+        for (uint256 i = 0; i < recipients.length; i++) {
+            _recipients[i] = Recipient(payable(recipients[i].recipient()), uint16(recipients[i].bps()));
+        }
+        return _recipients;
     }
 
     function testSplit() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(0x1)), 1000);
         recipients[1] = createRecipient(payable(address(0x2)), 9000);
         bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
@@ -58,7 +66,7 @@ contract ImmutableSplitsTest is Test {
     }
 
     function testSplitSkipsZeroAmount() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         Receivooooor receivooooor = new Receivooooor();
         recipients[0] = createRecipient(payable(receivooooor), 1);
         recipients[1] = createRecipient(payable(address(0x2)), 9999);
@@ -74,7 +82,7 @@ contract ImmutableSplitsTest is Test {
     }
 
     function testSplitSkipsZeroBalance() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         Receivooooor receivooooor1 = new Receivooooor();
         Receivooooor receivooooor2 = new Receivooooor();
         recipients[0] = createRecipient(payable(receivooooor1), 5000);
@@ -91,7 +99,7 @@ contract ImmutableSplitsTest is Test {
     }
 
     function testSplitNonzeroBalance() public {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(0x1)), 5000);
         recipients[1] = createRecipient(payable(address(0x2)), 5000);
         ImmutableSplit clone = _deployClone(recipients);
@@ -201,7 +209,7 @@ contract ImmutableSplitsTest is Test {
 
     function testReenterReceive() public {
         Reenterooooor reenterooooor = new Reenterooooor();
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(reenterooooor), 5000);
         recipients[1] = createRecipient(payable(address(type(uint160).max)), 5000);
 
@@ -211,13 +219,13 @@ contract ImmutableSplitsTest is Test {
     }
 
     function _deployClone(uint16 bps1, uint16 bps2) internal returns (ImmutableSplit) {
-        Recipient[] memory recipients = new Recipient[](2);
+        RecipientType[] memory recipients = new RecipientType[](2);
         recipients[0] = createRecipient(payable(address(0x1)), bps1);
         recipients[1] = createRecipient(payable(address(0x2)), bps2);
         return _deployClone(recipients);
     }
 
-    function _deployClone(Recipient[] memory recipients) internal returns (ImmutableSplit) {
+    function _deployClone(RecipientType[] memory recipients) internal returns (ImmutableSplit) {
         bytes memory data = abi.encodeWithSelector(ImmutableSplit.receiveHook.selector, recipients);
         return ImmutableSplit(payable(Create2ClonesWithImmutableArgs.clone(address(impl), data, bytes32(0))));
     }
