@@ -1,6 +1,6 @@
 {
   "name": "@emo-eth/immutable-splits",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "ImmutableSplits are a set of lightweight, immutable, gas-efficient payout split contracts. They are designed to be deployed to a deterministic address by a factory contract, which tracks if a particular payout split has already been deployed.",
   "directories": {
     "lib": "lib",
