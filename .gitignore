@@ -12,3 +12,5 @@ out/
 html
 lcov.info
 .*
+
+node_modules

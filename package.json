@@ -1,0 +1,34 @@
+{
+  "name": "@emo-eth/immutable-splits",
+  "version": "0.1.0",
+  "description": "ImmutableSplits are a set of lightweight, immutable, gas-efficient payout split contracts. They are designed to be deployed to a deterministic address by a factory contract, which tracks if a particular payout split has already been deployed.",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "forge test -vvv"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/emo-eth/immutable-splits.git"
+  },
+  "keywords": [
+    "ethereum",
+    "immutable",
+    "splits",
+    "payouts"
+  ],
+  "author": "emo.eth",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/emo-eth/immutable-splits/issues"
+  },
+  "homepage": "https://github.com/emo-eth/immutable-splits#readme",
+  "files": [
+    "src"
+  ],
+  "dependencies": {
+    "@emo-eth/create2-clones-with-immutable-args": "^0.1.0"
+  }
+}
