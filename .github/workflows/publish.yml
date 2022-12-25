@@ -12,7 +12,7 @@ jobs:
           node-version: "16.x"
           registry-url: "https://registry.npmjs.org"
       - run: grep -RiIln 'create2-clones-with-immutable-args' src | xargs sed -i 's/create2\-clones-with-immutable-args/@emo-eth\/create2-clones-with-immutable-args\/src/g'
-      - run: grep -RiIln 'solmate' src | xargs sed -i '' 's/solmate/solmate\/src/g'
+      - run: grep -RiIln 'solmate' src | xargs sed -i 's/solmate/solmate\/src/g'
       - run: yarn
       - run: npm publish --access public
         env:
