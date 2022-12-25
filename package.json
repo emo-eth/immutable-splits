@@ -29,7 +29,7 @@
     "src"
   ],
   "dependencies": {
-    "@emo-eth/create2-clones-with-immutable-args": "^0.1.0",
+    "@emo-eth/create2-clones-with-immutable-args": "^0.1.1",
     "solmate": "^6.6.1"
   }
 }
